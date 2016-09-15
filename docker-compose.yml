@@ -1,0 +1,48 @@
+version: '2'
+
+services:
+    python: 
+        build: ./python
+        container_name: rtx1200-python
+        networks:
+            - default
+
+    grafana:
+        image: grafana/grafana
+        container_name: rtx1200-grafana
+        ports:
+            - "3000:3000"
+        environment:
+            - GF_SECURITY_ADMIN_PASSWORD=changeme
+        volumes_from:
+            - grafana-storage
+        networks:
+            - default
+
+    grafana-storage:
+        image: busybox:latest
+        container_name: rtx1200-grafana-storage
+        volumes:
+            - ./grafana:/var/lib/grafana
+
+    influxdb:
+        image: tutum/influxdb:latest
+        container_name: rtx1200-influxdb
+        ports:
+            - "8086:8086"
+            - "8083:8083"
+        volumes_from:
+            - influxdb-storage
+        networks:
+            - default
+
+    influxdb-storage:
+        image: busybox:latest
+        container_name: rtx1200-influxdb-storage
+        volumes:
+            - ./influxdb:/data
+
+networks:
+    default:
+        external:
+            name: ringo
