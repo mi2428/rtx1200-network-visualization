@@ -2,10 +2,18 @@ version: '2'
 
 services:
     python: 
-        build: ./python
+        build: .
         container_name: rtx1200-python
-        networks:
-            - default
+        environment:
+            - ROUTER_IP_ADDRESS=10.0.10.254
+            - ROUTER_LOGIN_PASSWORD=
+            - ROUTER_PROMPT=RTX1200
+            - INFLUX_DB_ADDRESS=rtx1200-influxdb
+            - INFLUX_DB_PORT=8086
+            - INFLUX_DB_USER=admin
+            - INFLUX_DB_PASSWORD=changeme
+            - MONITORING_INTERVAL=15
+            - BANDWIDTH_SAMPLING_INTERVAL=2
 
     grafana:
         image: grafana/grafana
@@ -16,8 +24,6 @@ services:
             - GF_SECURITY_ADMIN_PASSWORD=changeme
         volumes_from:
             - grafana-storage
-        networks:
-            - default
 
     grafana-storage:
         image: busybox:latest
@@ -33,16 +39,14 @@ services:
             - "8083:8083"
         volumes_from:
             - influxdb-storage
-        networks:
-            - default
+        volumes:
+            - ./init.influxql:init_script.influxql:ro
+        environment:
+            - ADMIN_USER=admin
+            - INFLUXDB_INIT_PWD=changeme
 
     influxdb-storage:
         image: busybox:latest
         container_name: rtx1200-influxdb-storage
         volumes:
             - ./influxdb:/data
-
-networks:
-    default:
-        external:
-            name: ringo

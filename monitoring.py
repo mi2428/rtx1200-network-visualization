@@ -1,22 +1,22 @@
 #!/usr/bin/python3
 from influxdb import InfluxDBClient
-import telnetlib, re, time
+import telnetlib, re, time, os
 
-ROUTER = "10.0.10.254"
-PASSWORD = ""
-PROMPT="RTX1200"
+ROUTER = os.environ["ROUTER_IP_ADDRESS"]
+PASSWORD = os.environ["ROUTER_LOGIN_PASSWORD"]
+PROMPT = os.environ["ROUTER_PROMPT"]
 
-DB_CONTAINER = "rtx1200-influxdb"
-DB_PORT = 8086
-DB_USER = "admin"
-DB_PASSWORD = "changeme"
+DB_CONTAINER = os.environ["INFLUX_DB_ADDRESS"]
+DB_PORT = os.environ["INFLUX_DB_PORT"]
+DB_USER = os.environ["INFLUX_DB_USER"]
+DB_PASSWORD = os.environ["INFLUX_DB_PASSWORD"]
 
-MONITORING_INTERVAL = 15
-BANDWIDTH_SAMPLING_INTERVAL = 2
+MONITORING_INTERVAL = os.environ["MONITORING_INTERVAL"]
+BANDWIDTH_SAMPLING_INTERVAL = os.environ["BANDWIDTH_SAMPLING_INTERVAL"]
 
 """
 firmware version
-    RTX1200 Rev.10.01.65 (Tue Oct 13 12:23:48 2015)
+RTX1200 Rev.10.01.65 (Tue Oct 13 12:23:48 2015)
 """
 def run(cmd):
     tn = telnetlib.Telnet(ROUTER)
@@ -59,7 +59,6 @@ def environment_mon():
     second  = int(time[0][2])
     uptime = day * 24 * 60 * 60 + hour * 60 * 60 + minute * 60 + second
 
-    #metrics["environment"]["firmware"] = status.split("\r\n")[2].split()[1]
     metrics["environment"]["uptime"] = uptime
     metrics["environment"]["cpu_5sec"] = int(grep("(\d+)%\(5sec\)", status)[0])
     metrics["environment"]["cpu_1min"] = int(grep("(\d+)%\(1min\)", status)[0])
@@ -113,8 +112,6 @@ def pp1_traffic_mon(sec):
 
     metrics["pp1"]["bandwidth_rcv"] = (rcv2 - rcv1) * 8 / sec
     metrics["pp1"]["bandwidth_snd"] = (snd2 - snd1) * 8 / sec
-    #metrics["pp1"]["load_rcv"] = grep("Load: (\d+\.\d+)%", status2)[0]
-    #metrics["pp1"]["load_snd"] = grep("Load: (\d+\.\d+)%", status2)[1]
     metrics["pp1"]["load_rcv"] = round(metrics["pp1"]["bandwidth_rcv"] / bandwidth, 2)
     metrics["pp1"]["load_snd"] = round(metrics["pp1"]["bandwidth_snd"] / bandwidth, 2)
 
