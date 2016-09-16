@@ -39,11 +39,10 @@ services:
             - "8083:8083"
         volumes_from:
             - influxdb-storage
-        volumes:
-            - ./init.influxql:init_script.influxql:ro
         environment:
             - ADMIN_USER=admin
             - INFLUXDB_INIT_PWD=changeme
+            - PRE_CREATE_DB=environment;nat;dhcp;pp1;lan1
 
     influxdb-storage:
         image: busybox:latest
